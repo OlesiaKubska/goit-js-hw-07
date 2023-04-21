@@ -1,8 +1,14 @@
-import { galleryItems } from './gallery-items.js'; //Ця функція імпортує необхідний масив даних з модуля gallery-items.js.
-// Change code below this line
-const gallery = document.querySelector('.gallery'); //створюємо змінну gallery, щоб зберігати посилання на елемент ul зі списком елементів галереї
-//створимо функцію createGallery, яка приймає масив зображень та генерує розмітку для кожного елемента галереї
+import { galleryItems } from './gallery-items.js';//Ця функція імпортує необхідний масив даних з модуля gallery-items.js.
 
+// Change code below this line
+
+const galleryList = document.querySelector('.gallery'); //створюємо змінну galleryList, щоб зберігати посилання на елемент ul зі списком елементів галереї
+const galleryElements = createGallery(galleryItems);
+galleryList.append(...galleryElements);
+
+galleryList.addEventListener('click', onGalleryItemClick);
+
+//створимо функцію createGallery, яка приймає масив зображень та генерує розмітку для кожного елемента галереї
 function createGallery(items) {
     return items
         //використовуємо метод map для перетворення кожного елемента масиву galleryItems в HTML-розмітку
@@ -24,45 +30,36 @@ function createGallery(items) {
             item.appendChild(link);
             
             return item;
-            
         });
 }
 
-//onGalleryItemClick викликається при кліку на елемент галереї та запускає модальне вікно з зображенням в оригінальному розмірі. 
+//створює новий екземпляр модального вікна з бібліотеки basicLightbox 
+const instance = basicLightbox.create(`
+    <img width="1280" height="auto" src="">`, {
+        onShow: (instance) => {
+        window.addEventListener('keydown', onEscKeyPress);
+        },
+        onClose: (instance) => {
+        window.removeEventListener('keydown', onEscKeyPress);
+        },
+    }
+);
+
+//onGalleryItemClick викликається при кліку на елемент галереї та запускає модальне вікно з зображенням в оригінальному розмірі.
 function onGalleryItemClick(e) {
     e.preventDefault();
-//перевіряє, чи був клік зроблений на зображенні (елементі img),
-    const img = e.target;
-    if (img.nodeName !== 'IMG') {
-        return;
-    }
-//створює новий екземпляр модального вікна з бібліотеки basicLightbox 
-    const instance = basicLightbox.create(`
-        <div class="modal">
-            <img src="${img.dataset.source}" class="modal__image" alt="${img.alt}" />
-        </div>
-    `);
+    //перевіряє, чи був клік зроблений на зображенні (елементі img),
+    const datasetSource = e.target.dataset.source;
+    if (!datasetSource) return;
+    instance.element().querySelector('img').src = datasetSource;
     
     instance.show();
-
-    document.addEventListener('keydown', onModalClose); //додає обробник події keydown для закриття модального вікна при натисканні клавіші Escape.
 }
 
-
-//onModalClose  викликається при натисканні клавіші Escape під час відкритого модального вікна. 
-function onModalClose(e) {
-    if (e.code !== 'Escape') {
-        return;
-    }
-
-
-    document.removeEventListener('keydown', onModalClose); //видаляє обробник події keydown, щоб не викликати цю функцію більше.
+function onEscKeyPress(e) {
+    if (e.code !== 'Escape') return;
+    instance.close();
 }
-
-
-gallery.append(...createGallery(galleryItems)); //додає до галереї усі створені елементи зображень, створені за допомогою функції createGallery.
-
-gallery.addEventListener('click', onGalleryItemClick); //додає обробник події click до галереї, який викликає функцію onGalleryItemClick для обробки кліків на елементах галереї.
 
 //виводить масив galleryItems в консоль, щоб переконатися, що дані були імпортовані правильно
 console.log(galleryItems);
